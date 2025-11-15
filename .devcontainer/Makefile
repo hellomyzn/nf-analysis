@@ -25,7 +25,7 @@ dev:
 tidy:
 	docker compose ${DOCKER_COMPOSE_FILE_PATH} ${PROJECT_FLAG} ${ENV_PATH} exec ${USER_FLAG} workspace bash -c 'cd ${WORKDIR}/src && go mod tidy'
 test:
-	docker compose ${DOCKER_COMPOSE_FILE_PATH} ${PROJECT_FLAG} ${ENV_PATH} exec ${USER_FLAG} workspace bash -c 'cd ${WORKDIR}/src && go test -v'
+	docker compose ${DOCKER_COMPOSE_FILE_PATH} ${PROJECT_FLAG} ${ENV_PATH} exec ${USER_FLAG} workspace bash -c 'cd ${WORKDIR}/src && go test ./... -v'
 test-cover:
 	docker compose ${DOCKER_COMPOSE_FILE_PATH} ${PROJECT_FLAG} ${ENV_PATH} exec ${USER_FLAG} workspace bash -c 'cd ${WORKDIR}/src && ${TEST_WITH_COVERAGE} && ${CREATE_COVERAGE_HTML}' \
 		&& open ../src/test/coverage/coverage.html
