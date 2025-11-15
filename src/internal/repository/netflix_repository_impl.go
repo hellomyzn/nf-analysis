@@ -70,10 +70,11 @@ func (r *netflixRepositoryImpl) SaveCSV(path string, records []model.NetflixReco
 	defer writer.Flush()
 
 	// header
-	writer.Write([]string{"date", "title", "season", "episode"})
+	writer.Write([]string{"id", "date", "title", "season", "episode"})
 
 	for _, rec := range sorted {
 		writer.Write([]string{
+			rec.ID,
 			rec.Date,
 			rec.Title,
 			rec.Season,

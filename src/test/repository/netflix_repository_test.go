@@ -53,12 +53,14 @@ func Test_SaveCSV_SortsByDateDesc(t *testing.T) {
 
 	records := []model.NetflixRecord{
 		{
+			ID:      "vid-2",
 			Title:   "Later Episode",
 			Season:  "Season 1",
 			Episode: "Episode 2",
 			Date:    "2025-11-13",
 		},
 		{
+			ID:      "vid-1",
 			Title:   "Earlier Episode",
 			Season:  "Season 1",
 			Episode: "Episode 1",
@@ -82,9 +84,9 @@ func Test_SaveCSV_SortsByDateDesc(t *testing.T) {
 	}
 
 	expectedOrder := []string{
-		"date,title,season,episode",
-		"2025-11-14,Earlier Episode,Season 1,Episode 1",
-		"2025-11-13,Later Episode,Season 1,Episode 2",
+		"id,date,title,season,episode",
+		"vid-1,2025-11-14,Earlier Episode,Season 1,Episode 1",
+		"vid-2,2025-11-13,Later Episode,Season 1,Episode 2",
 	}
 
 	for i, line := range lines {
