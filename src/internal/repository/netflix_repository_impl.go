@@ -4,6 +4,8 @@ import (
 	"encoding/csv"
 	"os"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/hellomyzn/nf-analysis/internal/model"
 )
@@ -60,6 +62,13 @@ func (r *netflixRepositoryImpl) SaveCSV(path string, records []model.NetflixReco
 		return sorted[i].Date > sorted[j].Date
 	})
 
+	nextID := r.newIDGenerator(path)
+	for i := range sorted {
+		if sorted[i].ID == "" {
+			sorted[i].ID = nextID()
+		}
+	}
+
 	f, err := os.Create(path)
 	if err != nil {
 		return err
@@ -83,4 +92,88 @@ func (r *netflixRepositoryImpl) SaveCSV(path string, records []model.NetflixReco
 	}
 
 	return nil
+}
+
+func (r *netflixRepositoryImpl) newIDGenerator(path string) func() string {
+	var (
+		next   = 1
+		prefix string
+		width  int
+	)
+
+	if f, err := os.Open(path); err == nil {
+		defer f.Close()
+
+		reader := csv.NewReader(f)
+		if rows, err := reader.ReadAll(); err == nil {
+			for i := 1; i < len(rows); i++ {
+				row := rows[i]
+				if len(row) == 0 {
+					continue
+				}
+
+				id := strings.TrimSpace(row[0])
+				if id == "" {
+					continue
+				}
+
+				if p, w, value, ok := parseIDComponents(id); ok {
+					if value >= next {
+						prefix = p
+						width = w
+						next = value + 1
+					}
+					continue
+				}
+
+				if value, err := strconv.Atoi(id); err == nil {
+					if value >= next {
+						prefix = ""
+						width = 0
+						next = value + 1
+					}
+				}
+			}
+		}
+	}
+
+	return func() string {
+		value := next
+		next++
+
+		digits := strconv.Itoa(value)
+		if width > 0 {
+			if len(digits) < width {
+				digits = strings.Repeat("0", width-len(digits)) + digits
+			}
+			return prefix + digits
+		}
+
+		return prefix + digits
+	}
+}
+
+func parseIDComponents(id string) (prefix string, width int, value int, ok bool) {
+	trimmed := strings.TrimSpace(id)
+	if trimmed == "" {
+		return "", 0, 0, false
+	}
+
+	idx := len(trimmed) - 1
+	for idx >= 0 && trimmed[idx] >= '0' && trimmed[idx] <= '9' {
+		idx--
+	}
+	idx++
+
+	if idx >= len(trimmed) {
+		return "", 0, 0, false
+	}
+
+	digits := trimmed[idx:]
+	value, err := strconv.Atoi(digits)
+	if err != nil {
+		return "", 0, 0, false
+	}
+
+	return trimmed[:idx], len(digits), value, true
 }
