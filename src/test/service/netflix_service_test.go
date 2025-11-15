@@ -52,18 +52,14 @@ func Test_TransformRecords(t *testing.T) {
 		},
 		historyRecords: []model.NetflixRecord{
 			{
-				ID:      "vid-0041",
-				Title:   "The Walking Dead",
-				Season:  "Season 5",
-				Episode: "Four Walls and a Roof",
-				Date:    "2025-11-14",
+				ID:    "vid-0041",
+				Title: "The Walking Dead: Season 5: Four Walls and a Roof",
+				Date:  "2025-11-14",
 			},
 			{
-				ID:      "vid-0042",
-				Title:   "Existing Show",
-				Season:  "Season 1",
-				Episode: "Episode 1",
-				Date:    "2025-11-12",
+				ID:    "vid-0042",
+				Title: "Existing Show: Season 1: Episode 1",
+				Date:  "2025-11-12",
 			},
 		},
 	}
@@ -86,7 +82,7 @@ func Test_TransformRecords(t *testing.T) {
 		t.Fatalf("expected first record ID vid-0043, got %s", records[0].ID)
 	}
 
-	if records[0].Title != "One Piece" || records[0].Season != "Egghead Arc ②" || records[0].Episode != "Episode 1149" {
+	if records[0].Title != "One Piece: Egghead Arc ②: Episode 1149" {
 		t.Fatalf("unexpected first record content: %+v", records[0])
 	}
 
@@ -104,11 +100,9 @@ func Test_SaveHistory_SimplyMergesExistingAndIncoming(t *testing.T) {
 	mock := &mockRepo{
 		historyRecords: []model.NetflixRecord{
 			{
-				ID:      "vid-0041",
-				Title:   "Existing Episode",
-				Season:  "Season 1",
-				Episode: "Episode 1",
-				Date:    "2025-11-15",
+				ID:    "vid-0041",
+				Title: "Existing Episode: Season 1: Episode 1",
+				Date:  "2025-11-15",
 			},
 		},
 	}
@@ -116,11 +110,9 @@ func Test_SaveHistory_SimplyMergesExistingAndIncoming(t *testing.T) {
 
 	incoming := []model.NetflixRecord{
 		{
-			ID:      "vid-0042",
-			Title:   "New Episode",
-			Season:  "Season 1",
-			Episode: "Episode 2",
-			Date:    "2025-11-16",
+			ID:    "vid-0042",
+			Title: "New Episode: Season 1: Episode 2",
+			Date:  "2025-11-16",
 		},
 	}
 
@@ -149,11 +141,9 @@ func Test_SaveHistory_PersistsExistingWhenNoIncoming(t *testing.T) {
 	mock := &mockRepo{
 		historyRecords: []model.NetflixRecord{
 			{
-				ID:      "vid-0041",
-				Title:   "Existing Episode",
-				Season:  "Season 1",
-				Episode: "Episode 1",
-				Date:    "2025-11-15",
+				ID:    "vid-0041",
+				Title: "Existing Episode: Season 1: Episode 1",
+				Date:  "2025-11-15",
 			},
 		},
 	}

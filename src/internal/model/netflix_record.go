@@ -1,9 +1,7 @@
 package model
 
 type NetflixRecord struct {
-	ID      string
-	Date    string
-	Title   string
-	Season  string
-	Episode string
+	ID    string
+	Date  string
+	Title string
 }

@@ -49,12 +49,9 @@ func (s *NetflixService) TransformRecords(rawPath string, historyPath string) ([
 			return nil, err
 		}
 
-		title, season, episode := util.SplitTitle(r.Title)
 		candidate := normalizeRecord(model.NetflixRecord{
-			Title:   title,
-			Season:  season,
-			Episode: episode,
-			Date:    date,
+			Title: strings.TrimSpace(r.Title),
+			Date:  date,
 		})
 
 		sig := recordSignature(candidate)
@@ -106,13 +103,11 @@ func normalizeRecord(rec model.NetflixRecord) model.NetflixRecord {
 	rec.ID = strings.TrimSpace(rec.ID)
 	rec.Date = strings.TrimSpace(rec.Date)
 	rec.Title = strings.TrimSpace(rec.Title)
-	rec.Season = strings.TrimSpace(rec.Season)
-	rec.Episode = strings.TrimSpace(rec.Episode)
 	return rec
 }
 
 func recordSignature(rec model.NetflixRecord) string {
-	parts := []string{rec.Date, rec.Title, rec.Season, rec.Episode}
+	parts := []string{rec.Date, rec.Title}
 
 	for i := range parts {
 		parts[i] = strings.TrimSpace(parts[i])
