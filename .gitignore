@@ -1,9 +1,8 @@
 *.env
-src/config/webhooks.env
 src/server
 
 # CSV（Git未管理）
-/src/src/csv/*.csv
+/src/src/csv/**/*.csv
 
 
 # OS / Editor
