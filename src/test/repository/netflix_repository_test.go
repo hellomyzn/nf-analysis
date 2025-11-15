@@ -43,7 +43,7 @@ func Test_ReadRawCSV(t *testing.T) {
 	}
 }
 
-func Test_SaveCSV_SortsByDateDesc(t *testing.T) {
+func Test_SaveCSV_SortsByDateAsc(t *testing.T) {
 	tmpFile, err := os.CreateTemp("", "history-*.csv")
 	if err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
@@ -85,8 +85,8 @@ func Test_SaveCSV_SortsByDateDesc(t *testing.T) {
 
 	expectedOrder := []string{
 		"id,date,title,season,episode",
-		"vid-1,2025-11-14,Earlier Episode,Season 1,Episode 1",
 		"vid-2,2025-11-13,Later Episode,Season 1,Episode 2",
+		"vid-1,2025-11-14,Earlier Episode,Season 1,Episode 1",
 	}
 
 	for i, line := range lines {

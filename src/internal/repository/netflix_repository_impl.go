@@ -59,7 +59,7 @@ func (r *netflixRepositoryImpl) SaveCSV(path string, records []model.NetflixReco
 		if sorted[i].Date == sorted[j].Date {
 			return sorted[i].Title < sorted[j].Title
 		}
-		return sorted[i].Date > sorted[j].Date
+		return sorted[i].Date < sorted[j].Date
 	})
 
 	nextID := r.newIDGenerator(path)
