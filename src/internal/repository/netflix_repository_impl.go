@@ -3,6 +3,7 @@ package repository
 import (
 	"encoding/csv"
 	"os"
+	"sort"
 
 	"github.com/hellomyzn/nf-analysis/internal/model"
 )
@@ -49,6 +50,16 @@ func (r *netflixRepositoryImpl) ReadRawCSV(path string) ([]RawNetflixRecord, err
 }
 
 func (r *netflixRepositoryImpl) SaveCSV(path string, records []model.NetflixRecord) error {
+	sorted := make([]model.NetflixRecord, len(records))
+	copy(sorted, records)
+
+	sort.SliceStable(sorted, func(i, j int) bool {
+		if sorted[i].Date == sorted[j].Date {
+			return sorted[i].Title < sorted[j].Title
+		}
+		return sorted[i].Date > sorted[j].Date
+	})
+
 	f, err := os.Create(path)
 	if err != nil {
 		return err
@@ -61,7 +72,7 @@ func (r *netflixRepositoryImpl) SaveCSV(path string, records []model.NetflixReco
 	// header
 	writer.Write([]string{"date", "title", "season", "episode"})
 
-	for _, rec := range records {
+	for _, rec := range sorted {
 		writer.Write([]string{
 			rec.Date,
 			rec.Title,

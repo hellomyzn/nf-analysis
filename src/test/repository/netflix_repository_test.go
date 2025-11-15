@@ -2,8 +2,10 @@ package repository_test
 
 import (
 	"os"
+	"strings"
 	"testing"
 
+	"github.com/hellomyzn/nf-analysis/internal/model"
 	"github.com/hellomyzn/nf-analysis/internal/repository"
 )
 
@@ -38,5 +40,56 @@ func Test_ReadRawCSV(t *testing.T) {
 	}
 	if rows[0].Date != "11/14/25" {
 		t.Errorf("unexpected Date: %v", rows[0].Date)
+	}
+}
+
+func Test_SaveCSV_SortsByDateDesc(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "history-*.csv")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	tmpFile.Close()
+	defer os.Remove(tmpFile.Name())
+
+	records := []model.NetflixRecord{
+		{
+			Title:   "Later Episode",
+			Season:  "Season 1",
+			Episode: "Episode 2",
+			Date:    "2025-11-13",
+		},
+		{
+			Title:   "Earlier Episode",
+			Season:  "Season 1",
+			Episode: "Episode 1",
+			Date:    "2025-11-14",
+		},
+	}
+
+	repo := repository.NewNetflixRepository()
+	if err := repo.SaveCSV(tmpFile.Name(), records); err != nil {
+		t.Fatalf("SaveCSV returned error: %v", err)
+	}
+
+	data, err := os.ReadFile(tmpFile.Name())
+	if err != nil {
+		t.Fatalf("failed to read temp file: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("unexpected number of lines: %d", len(lines))
+	}
+
+	expectedOrder := []string{
+		"date,title,season,episode",
+		"2025-11-14,Earlier Episode,Season 1,Episode 1",
+		"2025-11-13,Later Episode,Season 1,Episode 2",
+	}
+
+	for i, line := range lines {
+		if line != expectedOrder[i] {
+			t.Fatalf("line %d = %q, want %q", i, line, expectedOrder[i])
+		}
 	}
 }
