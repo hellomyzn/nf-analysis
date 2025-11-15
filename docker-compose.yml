@@ -1,0 +1,91 @@
+services:
+  workspace:
+    container_name: ${PROJECT_NAME:-nf-analysis}
+    hostname: ${PROJECT_NAME:-nf-analysis}
+    build:
+      context: .
+      dockerfile: ./infra/docker/go/Dockerfile
+      args:
+        USER_NAME: ${USER_NAME-myzn}
+        GROUP_NAME: ${GROUP_NAME-myzn}
+        UID: ${UID-1000}
+        GID: ${GID-1000}
+        WORKDIR: ${WORKDIR-/home/myzn/workspace}
+        TZ: ${TZ-Asia/Tokyo}
+    working_dir: ${WORKDIR-/home/myzn/workspace}
+    tty: true
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - type: bind
+        source: ./src
+        target: ${WORKDIR-/home/myzn/workspace}
+      - type: bind
+        source: ${FOOTPRINTS_DIR}/history.csv
+        target: ${CSV_DIR-/home/myzn/workspace/src/csv}/history.csv
+    ports:
+      - target: 8080
+        published: ${APP_PORT:-8080}
+        protocol: tcp
+        mode: host
+    environment:
+      - TZ=${TZ-Asia/Tokyo}
+    # depends_on:
+    #   mysql:
+    #     condition: service_healthy
+
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: ${PROJECT_NAME:-nf-analysis}-mysql
+  #   hostname: ${PROJECT_NAME:-nf-analysis}-mysql
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+  #     MYSQL_DATABASE: ${MYSQL_DATABASE:-app}
+  #     MYSQL_USER: ${MYSQL_USER:-app}
+  #     MYSQL_PASSWORD: ${MYSQL_PASSWORD:-apppass}
+  #     TZ: ${TZ-Asia/Tokyo}
+  #   ports:
+  #     - target: 3306
+  #       published: ${MYSQL_PORT:-3306}
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - type: volume
+  #       source: mysql-data
+  #       target: /var/lib/mysql
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # postgres:
+  #   image: postgres:16
+  #   container_name: ${PROJECT_NAME:-nf-analysis}-postgres
+  #   hostname: ${PROJECT_NAME:-nf-analysis}-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-app}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apppass}
+  #     POSTGRES_DB: ${POSTGRES_DB:-app}
+  #     TZ: ${TZ-Asia/Tokyo}
+  #   ports:
+  #     - target: 5432
+  #       published: ${POSTGRES_PORT:-5432}
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - type: volume
+  #       source: postgres-data
+  #       target: /var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+# volumes:
+#   # mysql-data:
+#   # postgres-data:
