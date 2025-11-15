@@ -16,6 +16,7 @@ type mockService struct{}
 func (m *mockService) TransformRecords(path string) ([]model.NetflixRecord, error) {
 	return []model.NetflixRecord{
 		{
+			ID:      "mock-id",
 			Title:   "The Walking Dead",
 			Season:  "Season 5",
 			Episode: "Four Walls and a Roof",
