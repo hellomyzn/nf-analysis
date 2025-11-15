@@ -3,17 +3,19 @@ package repository
 import (
 	"encoding/csv"
 	"os"
+
+	"github.com/hellomyzn/nf-analysis/internal/model"
 )
 
-type netflixrepositoryImpl struct {
+type netflixRepositoryImpl struct {
 }
 
 func NewNetflixRepository() NetflixRepository {
-	return &netflixrepositoryImpl{}
+	return &netflixRepositoryImpl{}
 
 }
 
-func (r *netflixrepositoryImpl) ReadRawCSV(path string) ([]RawNetflixRecord, error) {
+func (r *netflixRepositoryImpl) ReadRawCSV(path string) ([]RawNetflixRecord, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -44,4 +46,29 @@ func (r *netflixrepositoryImpl) ReadRawCSV(path string) ([]RawNetflixRecord, err
 
 	return records, nil
 
+}
+
+func (r *netflixRepositoryImpl) SaveCSV(path string, records []model.NetflixRecord) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	writer := csv.NewWriter(f)
+	defer writer.Flush()
+
+	// header
+	writer.Write([]string{"date", "title", "season", "episode"})
+
+	for _, rec := range records {
+		writer.Write([]string{
+			rec.Date,
+			rec.Title,
+			rec.Season,
+			rec.Episode,
+		})
+	}
+
+	return nil
 }

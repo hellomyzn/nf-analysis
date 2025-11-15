@@ -6,6 +6,7 @@ import (
 
 	"github.com/hellomyzn/nf-analysis/internal/controller"
 	"github.com/hellomyzn/nf-analysis/internal/model"
+	"github.com/hellomyzn/nf-analysis/internal/repository"
 )
 
 // モック service とモック repository を用意する
@@ -36,7 +37,7 @@ func (m *mockRepo) SaveCSV(path string, records []model.NetflixRecord) error {
 
 // このインターフェースは既存の ReadRawCSV 用。
 // Controller では SaveCSV のみ必要。
-func (m *mockRepo) ReadRawCSV(path string) ([]model.NetflixRecord, error) {
+func (m *mockRepo) ReadRawCSV(path string) ([]repository.RawNetflixRecord, error) {
 	return nil, nil
 }
 
@@ -57,7 +58,7 @@ func Test_Controller_Run(t *testing.T) {
 	}
 
 	// 出力先の確認
-	if mockRepo.savedPath != "src/csv/netflix.csv" {
+	if mockRepo.savedPath != "src/csv/history.csv" {
 		t.Errorf("unexpected output path: %v", mockRepo.savedPath)
 	}
 

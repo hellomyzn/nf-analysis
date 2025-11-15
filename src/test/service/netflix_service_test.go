@@ -3,6 +3,7 @@ package service_test
 import (
 	"testing"
 
+	"github.com/hellomyzn/nf-analysis/internal/model"
 	"github.com/hellomyzn/nf-analysis/internal/repository"
 	"github.com/hellomyzn/nf-analysis/internal/service"
 )
@@ -21,6 +22,11 @@ func (m *mockRepo) ReadRawCSV(path string) ([]repository.RawNetflixRecord, error
 			Date:  "11/13/25",
 		},
 	}, nil
+}
+
+// Service では SaveCSV は使わないが、interface を満たすために定義
+func (m *mockRepo) SaveCSV(path string, records []model.NetflixRecord) error {
+	return nil
 }
 
 func Test_TransformRecords(t *testing.T) {

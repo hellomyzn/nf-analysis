@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/hellomyzn/nf-analysis/internal/model"
+	"github.com/hellomyzn/nf-analysis/internal/repository"
 )
 
 // Service が満たすべきインターフェース
@@ -13,17 +14,12 @@ type NetflixService interface {
 	TransformRecords(path string) ([]model.NetflixRecord, error)
 }
 
-// Repository が満たすべきインターフェース
-type NetflixRepository interface {
-	SaveCSV(path string, records []model.NetflixRecord) error
-}
-
 type NetflixController struct {
 	service NetflixService
-	repo    NetflixRepository
+	repo    repository.NetflixRepository
 }
 
-func NewNetflixController(service NetflixService, repo NetflixRepository) *NetflixController {
+func NewNetflixController(service NetflixService, repo repository.NetflixRepository) *NetflixController {
 	return &NetflixController{
 		service: service,
 		repo:    repo,
@@ -59,6 +55,6 @@ func (c *NetflixController) Run() error {
 	}
 
 	// 出力 CSV に保存
-	outputPath := "src/csv/netflix.csv"
+	outputPath := "src/csv/history.csv"
 	return c.repo.SaveCSV(outputPath, records)
 }
