@@ -12,7 +12,7 @@ import (
 func main() {
 	repo := repository.NewNetflixRepository()
 	srv := service.NewNetflixService(repo)
-	ctrl := controller.NewNetflixController(srv, repo)
+	ctrl := controller.NewNetflixController(srv)
 
 	if err := ctrl.Run(); err != nil {
 		fmt.Println("error:", err)
