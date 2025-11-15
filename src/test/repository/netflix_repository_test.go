@@ -53,18 +53,14 @@ func Test_SaveCSV_WritesRecordsInGivenOrder(t *testing.T) {
 
 	records := []model.NetflixRecord{
 		{
-			ID:      "vid-2",
-			Title:   "Later Episode",
-			Season:  "Season 1",
-			Episode: "Episode 2",
-			Date:    "2025-11-13",
+			ID:    "vid-2",
+			Title: "Later Episode",
+			Date:  "2025-11-13",
 		},
 		{
-			ID:      "vid-1",
-			Title:   "Earlier Episode",
-			Season:  "Season 1",
-			Episode: "Episode 1",
-			Date:    "2025-11-14",
+			ID:    "vid-1",
+			Title: "Earlier Episode",
+			Date:  "2025-11-14",
 		},
 	}
 
@@ -84,9 +80,9 @@ func Test_SaveCSV_WritesRecordsInGivenOrder(t *testing.T) {
 	}
 
 	expectedLines := []string{
-		"id,date,title,season,episode",
-		"vid-2,2025-11-13,\"Later Episode\",\"Season 1\",\"Episode 2\"",
-		"vid-1,2025-11-14,\"Earlier Episode\",\"Season 1\",\"Episode 1\"",
+		"id,date,title",
+		"vid-2,2025-11-13,\"Later Episode\"",
+		"vid-1,2025-11-14,\"Earlier Episode\"",
 	}
 
 	for i, line := range lines {
@@ -104,9 +100,9 @@ func Test_ReadHistory_ReturnsRecords(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	contents := strings.Join([]string{
-		"id,date,title,season,episode",
-		"vid-1,2025-11-13,\"Later Episode\",\"Season 1\",\"Episode 2\"",
-		"vid-2,2025-11-14,\"Earlier Episode\",\"Season 1\",\"Episode 1\"",
+		"id,date,title",
+		"vid-1,2025-11-13,\"Later Episode\"",
+		"vid-2,2025-11-14,\"Earlier Episode\"",
 	}, "\n")
 
 	if err := os.WriteFile(tmpFile.Name(), []byte(contents), 0644); err != nil {

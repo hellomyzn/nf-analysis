@@ -62,7 +62,7 @@ func (r *netflixRepositoryImpl) SaveCSV(path string, records []model.NetflixReco
 	writer := bufio.NewWriter(f)
 	defer writer.Flush()
 
-	if _, err := writer.WriteString("id,date,title,season,episode\n"); err != nil {
+	if _, err := writer.WriteString("id,date,title\n"); err != nil {
 		return err
 	}
 
@@ -71,8 +71,6 @@ func (r *netflixRepositoryImpl) SaveCSV(path string, records []model.NetflixReco
 			formatCSVField(rec.ID, false),
 			formatCSVField(rec.Date, false),
 			formatCSVField(rec.Title, true),
-			formatCSVField(rec.Season, true),
-			formatCSVField(rec.Episode, true),
 		}, ",") + "\n"
 
 		if _, err := writer.WriteString(line); err != nil {
@@ -129,12 +127,6 @@ func (r *netflixRepositoryImpl) ReadHistory(path string) ([]model.NetflixRecord,
 		}
 		if len(row) > 2 {
 			rec.Title = strings.TrimSpace(row[2])
-		}
-		if len(row) > 3 {
-			rec.Season = strings.TrimSpace(row[3])
-		}
-		if len(row) > 4 {
-			rec.Episode = strings.TrimSpace(row[4])
 		}
 
 		records = append(records, rec)

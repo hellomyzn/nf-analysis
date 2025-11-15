@@ -22,11 +22,9 @@ func (m *mockService) TransformRecords(rawPath string, historyPath string) ([]mo
 	m.lastHistoryPath = historyPath
 	return []model.NetflixRecord{
 		{
-			ID:      "mock-id",
-			Title:   "The Walking Dead",
-			Season:  "Season 5",
-			Episode: "Four Walls and a Roof",
-			Date:    "2025-11-14",
+			ID:    "mock-id",
+			Title: "The Walking Dead: Season 5: Four Walls and a Roof",
+			Date:  "2025-11-14",
 		},
 	}, nil
 }
