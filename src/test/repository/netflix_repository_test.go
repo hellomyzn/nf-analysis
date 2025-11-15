@@ -85,8 +85,8 @@ func Test_SaveCSV_WritesRecordsInGivenOrder(t *testing.T) {
 
 	expectedLines := []string{
 		"id,date,title,season,episode",
-		"vid-2,2025-11-13,Later Episode,Season 1,Episode 2",
-		"vid-1,2025-11-14,Earlier Episode,Season 1,Episode 1",
+		"vid-2,2025-11-13,\"Later Episode\",\"Season 1\",\"Episode 2\"",
+		"vid-1,2025-11-14,\"Earlier Episode\",\"Season 1\",\"Episode 1\"",
 	}
 
 	for i, line := range lines {
@@ -105,8 +105,8 @@ func Test_ReadHistory_ReturnsRecords(t *testing.T) {
 
 	contents := strings.Join([]string{
 		"id,date,title,season,episode",
-		"vid-1,2025-11-13,Later Episode,Season 1,Episode 2",
-		"vid-2,2025-11-14,Earlier Episode,Season 1,Episode 1",
+		"vid-1,2025-11-13,\"Later Episode\",\"Season 1\",\"Episode 2\"",
+		"vid-2,2025-11-14,\"Earlier Episode\",\"Season 1\",\"Episode 1\"",
 	}, "\n")
 
 	if err := os.WriteFile(tmpFile.Name(), []byte(contents), 0644); err != nil {

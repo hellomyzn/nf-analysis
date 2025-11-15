@@ -1,8 +1,10 @@
 package repository
 
 import (
+	"bufio"
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -57,27 +59,44 @@ func (r *netflixRepositoryImpl) SaveCSV(path string, records []model.NetflixReco
 	}
 	defer f.Close()
 
-	writer := csv.NewWriter(f)
+	writer := bufio.NewWriter(f)
 	defer writer.Flush()
 
-	// header
-	if err := writer.Write([]string{"id", "date", "title", "season", "episode"}); err != nil {
+	if _, err := writer.WriteString("id,date,title,season,episode\n"); err != nil {
 		return err
 	}
 
 	for _, rec := range records {
-		if err := writer.Write([]string{
-			rec.ID,
-			rec.Date,
-			rec.Title,
-			rec.Season,
-			rec.Episode,
-		}); err != nil {
+		line := strings.Join([]string{
+			formatCSVField(rec.ID, false),
+			formatCSVField(rec.Date, false),
+			formatCSVField(rec.Title, true),
+			formatCSVField(rec.Season, true),
+			formatCSVField(rec.Episode, true),
+		}, ",") + "\n"
+
+		if _, err := writer.WriteString(line); err != nil {
 			return err
 		}
 	}
 
-	return nil
+	return writer.Flush()
+}
+
+func formatCSVField(value string, forceQuote bool) string {
+	trimmed := strings.TrimSpace(value)
+	escaped := strings.ReplaceAll(trimmed, "\"", "\"\"")
+
+	needsQuote := forceQuote
+	if strings.ContainsAny(escaped, ",\n\r") {
+		needsQuote = true
+	}
+
+	if needsQuote {
+		return fmt.Sprintf("\"%s\"", escaped)
+	}
+
+	return escaped
 }
 
 func (r *netflixRepositoryImpl) ReadHistory(path string) ([]model.NetflixRecord, error) {

@@ -41,6 +41,20 @@ func Test_SplitTitle(t *testing.T) {
 			wantSeason:  "Egghead Arc ②",
 			wantEpisode: "Episode 1149",
 		},
+		{
+			name:        "Title contains single colon",
+			input:       "Ossan's Love: Episode 3",
+			wantTitle:   "Ossan's Love: Episode 3",
+			wantSeason:  "",
+			wantEpisode: "",
+		},
+		{
+			name:        "Title contains colon inside show name",
+			input:       "Guardian: The Lonely and Great God: Limited Series: Episode 11",
+			wantTitle:   "Guardian: The Lonely and Great God",
+			wantSeason:  "Limited Series",
+			wantEpisode: "Episode 11",
+		},
 	}
 
 	for _, tt := range cases {

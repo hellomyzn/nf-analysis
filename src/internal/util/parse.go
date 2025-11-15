@@ -20,25 +20,34 @@ func ConvertDate(input string) (string, error) {
 // 例: "The Walking Dead: Season 5: Four Walls and a Roof"
 // → title="The Walking Dead", season="Season 5", episode="Four Walls and a Roof"
 func SplitTitle(input string) (string, string, string) {
-	parts := strings.Split(input, ":")
-
-	for i := range parts {
-		parts[i] = strings.TrimSpace(parts[i])
+	trimmed := strings.TrimSpace(input)
+	if trimmed == "" {
+		return "", "", ""
 	}
 
-	if len(parts) == 3 {
-		return parts[0], parts[1], parts[2]
+	// シリーズものは区切りが2つ以上存在する想定。
+	// 末尾2つの区切りを Season / Episode の区切りとして扱い、
+	// それより前を Title として扱う。
+	colonCount := strings.Count(trimmed, ":")
+	if colonCount < 2 {
+		return trimmed, "", ""
 	}
 
-	// 想定外の形式でもクラッシュしないようにフォールバック
-	switch len(parts) {
-	case 1:
-		return parts[0], "", ""
-	case 2:
-		return parts[0], parts[0], ""
-	default:
-		// parts[0] = title, 残り全部 season or episode として結合
-		return parts[0], parts[1], strings.Join(parts[2:], ":")
+	last := strings.LastIndex(trimmed, ":")
+	if last == -1 {
+		return trimmed, "", ""
 	}
 
+	episode := strings.TrimSpace(trimmed[last+1:])
+	beforeEpisode := strings.TrimSpace(trimmed[:last])
+
+	secondLast := strings.LastIndex(beforeEpisode, ":")
+	if secondLast == -1 {
+		return trimmed, "", ""
+	}
+
+	season := strings.TrimSpace(beforeEpisode[secondLast+1:])
+	title := strings.TrimSpace(beforeEpisode[:secondLast])
+
+	return title, season, episode
 }
