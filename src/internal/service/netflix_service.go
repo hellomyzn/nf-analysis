@@ -20,12 +20,27 @@ func NewNetflixService(repo repository.NetflixRepository) *NetflixService {
 	}
 }
 
-func (s *NetflixService) TransformRecords(path string) ([]model.NetflixRecord, error) {
-	rawRecords, err := s.repo.ReadRawCSV(path)
+func (s *NetflixService) TransformRecords(rawPath string, historyPath string) ([]model.NetflixRecord, error) {
+	rawRecords, err := s.repo.ReadRawCSV(rawPath)
 	if err != nil {
 		return nil, err
 	}
 
+	historyRecords, err := s.repo.ReadHistory(historyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	knownSignatures := make(map[string]struct{}, len(historyRecords))
+	for i := range historyRecords {
+		historyRecords[i] = normalizeRecord(historyRecords[i])
+		sig := recordSignature(historyRecords[i])
+		if sig != "" {
+			knownSignatures[sig] = struct{}{}
+		}
+	}
+
+	dedup := make(map[string]struct{})
 	var results []model.NetflixRecord
 
 	for _, r := range rawRecords {
@@ -35,12 +50,40 @@ func (s *NetflixService) TransformRecords(path string) ([]model.NetflixRecord, e
 		}
 
 		title, season, episode := util.SplitTitle(r.Title)
-		results = append(results, model.NetflixRecord{
+		candidate := normalizeRecord(model.NetflixRecord{
 			Title:   title,
 			Season:  season,
 			Episode: episode,
 			Date:    date,
 		})
+
+		sig := recordSignature(candidate)
+		if sig == "" {
+			continue
+		}
+
+		if _, exists := knownSignatures[sig]; exists {
+			continue
+		}
+
+		if _, exists := dedup[sig]; exists {
+			continue
+		}
+
+		dedup[sig] = struct{}{}
+		results = append(results, candidate)
+	}
+
+	sort.Slice(results, func(i, j int) bool {
+		if results[i].Date == results[j].Date {
+			return results[i].Title < results[j].Title
+		}
+		return results[i].Date < results[j].Date
+	})
+
+	nextID := newIDGenerator(historyRecords)
+	for i := range results {
+		results[i].ID = nextID()
 	}
 
 	return results, nil

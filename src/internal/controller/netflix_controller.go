@@ -10,7 +10,7 @@ import (
 
 // Service が満たすべきインターフェース
 type NetflixService interface {
-	TransformRecords(path string) ([]model.NetflixRecord, error)
+	TransformRecords(rawPath string, historyPath string) ([]model.NetflixRecord, error)
 	SaveHistory(path string, records []model.NetflixRecord) error
 }
 
@@ -46,13 +46,14 @@ func (c *NetflixController) Run() error {
 		return errors.New("no CSV file found in src/csv/netflix")
 	}
 
+	outputPath := "src/csv/history.csv"
+
 	// Service で変換
-	records, err := c.service.TransformRecords(inputFile)
+	records, err := c.service.TransformRecords(inputFile, outputPath)
 	if err != nil {
 		return err
 	}
 
 	// 出力 CSV に保存
-	outputPath := "src/csv/history.csv"
 	return c.service.SaveHistory(outputPath, records)
 }

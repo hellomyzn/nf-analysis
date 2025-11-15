@@ -11,11 +11,15 @@ import (
 // モック service とモック repository を用意する
 
 type mockService struct {
-	savedPath    string
-	savedRecords []model.NetflixRecord
+	lastRawPath     string
+	lastHistoryPath string
+	savedPath       string
+	savedRecords    []model.NetflixRecord
 }
 
-func (m *mockService) TransformRecords(path string) ([]model.NetflixRecord, error) {
+func (m *mockService) TransformRecords(rawPath string, historyPath string) ([]model.NetflixRecord, error) {
+	m.lastRawPath = rawPath
+	m.lastHistoryPath = historyPath
 	return []model.NetflixRecord{
 		{
 			ID:      "mock-id",
@@ -46,6 +50,14 @@ func Test_Controller_Run(t *testing.T) {
 	err := c.Run()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if mockService.lastRawPath != "src/csv/netflix/input.csv" {
+		t.Errorf("unexpected raw path: %v", mockService.lastRawPath)
+	}
+
+	if mockService.lastHistoryPath != "src/csv/history.csv" {
+		t.Errorf("unexpected history path: %v", mockService.lastHistoryPath)
 	}
 
 	// 出力先の確認
