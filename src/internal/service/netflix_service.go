@@ -95,61 +95,9 @@ func (s *NetflixService) SaveHistory(path string, incoming []model.NetflixRecord
 		return err
 	}
 
-	existingByID := make(map[string]struct{}, len(existing))
-	existingBySignature := make(map[string]struct{}, len(existing))
-
-	for i := range existing {
-		existing[i] = normalizeRecord(existing[i])
-		if existing[i].ID != "" {
-			existingByID[existing[i].ID] = struct{}{}
-		}
-		sig := recordSignature(existing[i])
-		if sig != "" {
-			existingBySignature[sig] = struct{}{}
-		}
-	}
-
-	var toAppend []model.NetflixRecord
-	for _, rec := range incoming {
-		normalized := normalizeRecord(rec)
-
-		if normalized.ID != "" {
-			if _, ok := existingByID[normalized.ID]; ok {
-				continue
-			}
-		}
-
-		sig := recordSignature(normalized)
-		if sig != "" {
-			if _, ok := existingBySignature[sig]; ok {
-				continue
-			}
-		}
-
-		toAppend = append(toAppend, normalized)
-		if normalized.ID != "" {
-			existingByID[normalized.ID] = struct{}{}
-		}
-		if sig != "" {
-			existingBySignature[sig] = struct{}{}
-		}
-	}
-
-	combined := append(existing, toAppend...)
-
-	sort.SliceStable(combined, func(i, j int) bool {
-		if combined[i].Date == combined[j].Date {
-			return combined[i].Title < combined[j].Title
-		}
-		return combined[i].Date < combined[j].Date
-	})
-
-	nextID := newIDGenerator(existing)
-	for i := range combined {
-		if combined[i].ID == "" {
-			combined[i].ID = nextID()
-		}
-	}
+	combined := make([]model.NetflixRecord, 0, len(existing)+len(incoming))
+	combined = append(combined, existing...)
+	combined = append(combined, incoming...)
 
 	return s.repo.SaveCSV(path, combined)
 }

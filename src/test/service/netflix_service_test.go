@@ -100,7 +100,7 @@ func Test_TransformRecords(t *testing.T) {
 
 }
 
-func Test_SaveHistory_AppendsOnlyNewRecordsAndAssignsIDs(t *testing.T) {
+func Test_SaveHistory_SimplyMergesExistingAndIncoming(t *testing.T) {
 	mock := &mockRepo{
 		historyRecords: []model.NetflixRecord{
 			{
@@ -110,104 +110,64 @@ func Test_SaveHistory_AppendsOnlyNewRecordsAndAssignsIDs(t *testing.T) {
 				Episode: "Episode 1",
 				Date:    "2025-11-15",
 			},
-			{
-				ID:      "vid-0042",
-				Title:   "Another Existing Episode",
-				Season:  "Season 1",
-				Episode: "Episode 2",
-				Date:    "2025-11-14",
-			},
 		},
 	}
 	srv := service.NewNetflixService(mock)
 
 	incoming := []model.NetflixRecord{
 		{
-			Title:   "Existing Episode",
+			ID:      "vid-0042",
+			Title:   "New Episode",
 			Season:  "Season 1",
-			Episode: "Episode 1",
-			Date:    "2025-11-15",
-		},
-		{
-			Title:   "Brand New Episode",
-			Season:  "Season 1",
-			Episode: "Episode 3",
-			Date:    "2025-11-16",
-		},
-		{
-			Title:   "Older Episode",
-			Season:  "Season 2",
 			Episode: "Episode 2",
-			Date:    "2025-11-10",
+			Date:    "2025-11-16",
 		},
 	}
 
 	if err := srv.SaveHistory("history.csv", incoming); err != nil {
 		t.Fatalf("SaveHistory returned error: %v", err)
-	}
-
-	saved := mock.savedRecords
-	if len(saved) != 4 {
-		t.Fatalf("expected 4 records saved, got %d", len(saved))
-	}
-
-	if saved[0].Title != "Older Episode" {
-		t.Fatalf("expected first record to be Older Episode, got %q", saved[0].Title)
-	}
-	if saved[0].ID != "vid-0043" {
-		t.Fatalf("expected Older Episode to receive ID vid-0043, got %q", saved[0].ID)
-	}
-
-	if saved[len(saved)-1].Title != "Brand New Episode" {
-		t.Fatalf("expected last record to be Brand New Episode, got %q", saved[len(saved)-1].Title)
-	}
-	if saved[len(saved)-1].ID != "vid-0044" {
-		t.Fatalf("expected Brand New Episode to receive ID vid-0044, got %q", saved[len(saved)-1].ID)
-	}
-
-	for _, rec := range saved {
-		if rec.Title == "Existing Episode" && rec.ID != "vid-0041" {
-			t.Fatalf("expected Existing Episode to retain original ID, got %q", rec.ID)
-		}
 	}
 
 	if mock.savedPath != "history.csv" {
 		t.Fatalf("expected SaveCSV to be invoked with history.csv, got %q", mock.savedPath)
 	}
-}
 
-func Test_SaveHistory_AssignsIDsWhenHistoryMissing(t *testing.T) {
-	mock := &mockRepo{}
-	srv := service.NewNetflixService(mock)
-
-	incoming := []model.NetflixRecord{
-		{
-			Title:   "Newest Episode",
-			Season:  "Season 1",
-			Episode: "Episode 2",
-			Date:    "2025-11-14",
-		},
-		{
-			Title:   "Older Episode",
-			Season:  "Season 1",
-			Episode: "Episode 1",
-			Date:    "2025-11-13",
-		},
+	if len(mock.savedRecords) != 2 {
+		t.Fatalf("expected 2 records saved, got %d", len(mock.savedRecords))
 	}
 
-	if err := srv.SaveHistory("history.csv", incoming); err != nil {
+	if mock.savedRecords[0].ID != "vid-0041" {
+		t.Fatalf("expected first record to remain existing entry, got %q", mock.savedRecords[0].ID)
+	}
+
+	if mock.savedRecords[1] != incoming[0] {
+		t.Fatalf("expected incoming record to be appended without modification")
+	}
+}
+
+func Test_SaveHistory_PersistsExistingWhenNoIncoming(t *testing.T) {
+	mock := &mockRepo{
+		historyRecords: []model.NetflixRecord{
+			{
+				ID:      "vid-0041",
+				Title:   "Existing Episode",
+				Season:  "Season 1",
+				Episode: "Episode 1",
+				Date:    "2025-11-15",
+			},
+		},
+	}
+	srv := service.NewNetflixService(mock)
+
+	if err := srv.SaveHistory("history.csv", nil); err != nil {
 		t.Fatalf("SaveHistory returned error: %v", err)
 	}
 
-	saved := mock.savedRecords
-	if len(saved) != 2 {
-		t.Fatalf("expected 2 records saved, got %d", len(saved))
+	if len(mock.savedRecords) != 1 {
+		t.Fatalf("expected existing record to be saved, got %d", len(mock.savedRecords))
 	}
 
-	if saved[0].ID != "1" {
-		t.Fatalf("expected first record to have ID 1, got %q", saved[0].ID)
-	}
-	if saved[1].ID != "2" {
-		t.Fatalf("expected second record to have ID 2, got %q", saved[1].ID)
+	if mock.savedRecords[0].ID != "vid-0041" {
+		t.Fatalf("expected existing record to remain unchanged, got %q", mock.savedRecords[0].ID)
 	}
 }
