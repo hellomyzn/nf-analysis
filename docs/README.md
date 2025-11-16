@@ -1,27 +1,26 @@
-# 📌 要件定義サマリ
+# 📚 ドキュメント概要
 
-## 目的
-- 100〜数百の YouTube チャンネルを 6時間ごとに巡回し、新着動画をカテゴリ別に Discord / Slack へ通知する。
+nf-analysis のドキュメント一式です。Netflix の視聴履歴 CSV を正規化するための仕様、設計方針、開発ルールをまとめています。
 
-## 運用モード
-- GitHub Actions のみ（6時間ごと／cron: "0 */6 * * *"）。常駐コンテナは範囲外。
+## プロダクト概要
+- Netflix からダウンロードした `ViewingActivity.csv` を `src/csv/netflix/` に配置します。
+- コマンドを実行すると、新規視聴分のみを抽出し `src/csv/history.csv` に追記します。
+- タイトルと視聴日をキーに重複を排除し、連番 ID を維持しながら履歴を作成します。
 
-## 技術要件
-- 言語：Go 1.24+
-- アーキテクチャ：Controller / Service / Repository（インターフェース駆動）。必要に応じて DTO 使用。
-- ストレージ：DB 不使用。通知済み管理・チャンネル定義は CSV（リポジトリ外・Git未管理）。
-- 出力：Discord / Slack の Webhook 両対応（カテゴリ単位で切り替え）。
-- フィード：YouTube RSS（APIキー不要）。
-- カテゴリ：travel, news, など任意。カテゴリ→出力先（Discord/Slack）および Webhook キー名を config/app.yaml で定義。
-- 実行制御：レート制限のため、取得間隔・投稿間隔を設定値で制御。
+## ドキュメント構成
+| パス | 内容 |
+| ---- | ---- |
+| [`design/README.md`](design/README.md) | コンポーネント設計、CSV スキーマ、ID 採番ロジックなどの基本設計。 |
+| [`dev/README.md`](dev/README.md) | コーディング規約、テスト指針、CSV 配置ルールなどの開発ルール。 |
+| [`sequences/overview.md`](sequences/overview.md) | 実行フロー全体のシーケンス図。 |
+| [`sequences/history_merge.md`](sequences/history_merge.md) | `SaveHistory` が履歴ファイルを更新する際の詳細シーケンス。 |
 
-## 非機能要件
-- 無料運用（GitHub Actions の無料枠想定、短時間ジョブ）。
-- 冪等性：同一 videoId の重複通知防止（notified.csv で管理）。
-- 可観測性：標準出力に JSON ライクなログ（成功/失敗件数、経過時間）。
-- セキュリティ：Webhook URL は src/config/webhooks.env（Git未管理）に保存し、config/app.yaml はキー名のみを保持。
+## 用語
+- **生 CSV（raw）**：Netflix のエクスポートファイル。`Title,Date,...` のカラムを含みます。
+- **履歴 CSV（history）**：本ツールが生成する正規化済みファイル。`id,date,title` の3列で管理します。
+- **シグネチャ**：`date + title` の組み合わせ。重複判定に利用します。
 
-## 除外範囲（当面実施しない）
-- データベース永続化。
-- 秒〜分単位のリアルタイム通知。
-- YouTube Data API 連携（統計情報など）。
+## 参照
+- 実装コード：[`src/internal`](../src/internal)
+- テストコード：[`src/test`](../src/test)
+- 実行手順：リポジトリ直下の [`README.md`](../README.md)
