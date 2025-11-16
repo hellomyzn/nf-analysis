@@ -1,38 +1,30 @@
-# 🧭 開発ルール（提案）
+# 🧭 開発ルール
 
-1. 命名とディレクトリ
-- パッケージは用途で分割：controller, service, repository, notifier, model, config, util。
-- インターフェース命名は XxxRepository, XxxService を基本、実装は CSVXxxRepository 等で表現。
+## ディレクトリと命名
+- Go モジュールは `src/` に配置。`go run` や `go test` を行う際は `src` へ移動して実行します。
+- ドメインごとに `internal/controller`, `internal/service`, `internal/repository`, `internal/model`, `internal/util` に分割します。
+- テストコードは `src/test/<layer>` に配置し、実パッケージと同じ名前空間を利用します。
 
-2. 依存方向
-- controller → service → repository。逆依存禁止。インターフェースで注入（DI）。
-- notifier は service から利用し、repository と交差しない。
+## 依存方針
+- Controller → Service → Repository の一方向依存を維持します。
+- Repository はファイルシステムへのアクセスのみを担当し、ビジネスロジックを持たせません。
+- 日付変換などの共通処理は `internal/util` に集約します。
 
-3. DTO / Entity
-- 外部I/O（RSS, Webhook）や境界で使う構造体を model に DTO として定義。
+## CSV 運用
+- 生 CSV は `src/csv/netflix/` に配置します。複数ある場合は最新 1 ファイルのみを処理対象とします。
+- 履歴 CSV (`src/csv/history.csv`) は Git 管理外のファイルとして運用します。.gitignore に含まれていることを確認してください。
+- CSV のスキーマ変更が必要な場合は [`docs/design/README.md`](../design/README.md) を更新したうえで実装します。
 
-4. 設定管理
-- src/config/app.yaml にカテゴリ→出力先のマッピング、レート、フィルタ等を定義。
-- Webhook の実値は Git未管理の src/config/webhooks.env に記載。リポジトリ内に秘匿情報をコミットしない。
+## テストと品質
+- `go test ./...` を最小単位で実行し、サービスロジックとリポジトリのテストを維持します。
+- 追加のユーティリティを実装する際はテスト容易性を考慮し、純粋関数を心がけます。
+- 例外的なフォーマット（不正な日付など）が想定される場合はテストケースを追加して回帰を防ぎます。
 
-5. CSV 運用
-- src/src/csv/ 配下の CSV は Git管理対象外。.gitignore にパスを含める。
-- スキーマ変更時は docs/README.md に反映。
+## コーディングスタイル
+- `go fmt` / `go vet` / `golangci-lint` の利用を推奨します。
+- 外部依存を追加する場合は `go.mod` を更新し、ドキュメントに理由を記載します。
+- 公開予定の API は無く、すべて内部パッケージとして扱います。
 
-6. ログ / エラー
-- ログは INFO/ERROR とメタ（category, channel_id, video_id, elapsed_ms）を付与。
-- 外部通信はリトライ（指数バックオフ最大3回）＋失敗件数をサマリ表示。
-
-7. テスト方針
-- Service はインターフェースをモックし ユニットテスト を優先（RSS擬似データ／Webhookモック）。
-- リグレッション防止のため、normalizeVideoID はテストケースを充実。
-
-8. コード規約
-- golangci-lint 推奨。go fmt / go vet を CI に組込み。
-- パブリック関数には Godoc コメントを付与。
-
-9. PR 運用
-- 小さな粒度で PR。設計更新は docs/* に先出し。
-
-19. リリース / ローテーション
-- notified.csv が肥大化した場合のローテ手順を docs/README.md に明記。
+## PR / レビュー
+- ドキュメントを変更した場合は、関連する仕様書へのリンクも合わせて更新します。
+- 入出力仕様に影響する変更は必ず `docs/` 配下の該当箇所を修正し、README からのリンクを最新に保ちます。

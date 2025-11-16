@@ -1,55 +1,57 @@
 # nf-analysis
 
-YouTubeのRSSを巡回し、カテゴリごとに Discord / Slack へ新着動画を通知するジョブ（Go 1.24+）。
+Go 製のコマンドラインツールで、Netflix の「視聴履歴」CSV を正規化して履歴ファイルに追記します。生のエクスポートデータから重複視聴を取り除き、日付や ID を整理した `history.csv` を生成することを目的にしています。
 
-## 特長
-- 100〜数百チャンネル対応 / 6時間ごと実行（GitHub Actions）
-- DB不使用、CSVで軽量運用（Git未管理）
-- カテゴリ別に Discord/Slack を切替可能
-- Controller / Service / Repository のクリーン構成
+## 主な機能
+- **視聴履歴の正規化**：Netflix からエクスポートした `ViewingActivity.csv` を読み取り、日付を `YYYY-MM-DD` 形式に変換します。
+- **重複排除と履歴突合**：既存の `history.csv` を読み込み、タイトル＋日付の組み合わせで照合して未登録のエピソードだけを抽出します。
+- **連番 ID の自動採番**：最新の ID から連番を継続し、`vid-0001` のような接頭辞付きの形式も維持します。
+- **CSV 出力の整形**：カンマや改行を含むタイトルを適切にクォートし、UTF-8 のヘッダー付き CSV を書き出します。
 
-## ディレクトリ
-src/config/          # app.yaml（カテゴリ→出力先／ENV名、レート、フィルタ）, webhooks.env（Webhook実体、Git未管理）, youtube.env（APIキー、Git未管理）
-src/cmd/job/         # エントリポイント（RunOnceジョブ）
-src/internal/        # controller, service, repository, notifier, model, config, util
-src/src/csv/         # CSV置き場（Git未管理）
-docs/                # 設計ドキュメント
+## ディレクトリ構成
+```
+.
+├── README.md              # このファイル
+├── docs/                  # 仕様・設計ドキュメント
+├── src/
+│   ├── cmd/main.go        # エントリーポイント
+│   ├── internal/
+│   │   ├── controller/    # 入力・出力経路を制御
+│   │   ├── service/       # 重複排除や採番などのドメインロジック
+│   │   ├── repository/    # CSV の読込・書込
+│   │   └── util/          # 日付変換ユーティリティ
+│   └── test/              # サービス / リポジトリのユニットテスト
+└── infra/                 # 開発補助の Docker ファイルなど
+```
 
-## 前提
-- Go 1.24+
-- Webhook（Discord/Slack）のURLは src/config/webhooks.env に記載（Git未管理）
-- YouTube Data API キーは src/config/youtube.env に記載（Git未管理）
+## 必要要件
+- Go 1.24 以降
+- Netflix からエクスポートした `ViewingActivity.csv`
+- 既存履歴を保存する `src/csv/history.csv`（初回は空ファイルでも可）
 
-## セットアップ（ローカル）
+## 使い方
+1. 必要なディレクトリとファイルを用意します。
+   ```bash
+   mkdir -p src/csv/netflix
+   cp /path/to/ViewingActivity.csv src/csv/netflix/viewing_activity.csv
+   # 履歴ファイルが無ければヘッダーのみで作成
+   printf "id,date,title\n" > src/csv/history.csv
+   ```
+2. ツールを実行します。
+   ```bash
+   cd src
+   go run ./cmd
+   ```
+3. 処理が完了すると、`src/csv/history.csv` に新しいレコードが追記されます。
+
+## テスト
+ユニットテストは Go Modules 配下で実行します。
 ```bash
 cd src
-go mod tidy
-mkdir -p src/csv
-# Webhook設定ファイルを作成
-cp config/webhooks.env.example config/webhooks.env
-# YouTube API キー設定ファイルを作成
-cp config/youtube.env.example config/youtube.env
-# channels.csv / notified.csv を配置（Gitに含めない）
-go run ./cmd/job
+go test ./...
 ```
 
-## GitHub Actions（6時間ごと）
-
-- ワークフロー：.github/workflows/youtube-notify.yml
-- webhooks.env のキー例：DISCORD_WEBHOOK_TRAVEL, SLACK_WEBHOOK_NEWS, DISCORD_WEBHOOK_TECH
-
-## CSV スキーマ
-```channels.csv
-channel_id,category,name,enabled,fetch_limit
-UCxxxxxx1,travel,Backpacking Asia,true,10
-UCyyyyyy2,news,World News Digest,true,50
-```
-
-```notified.csv
-video_id,channel_id,published_at,notified_at
-```
-
-## YouTube API の利用
-
-- src/config/youtube.env に `YOUTUBE_API_KEY` を設定すると、`channels.csv` の `fetch_limit` が 15 以上のチャンネルは YouTube Data API (playlistItems) から取得します。
-- `fetch_limit` が 14 以下、もしくは youtube.env が存在しない / API キーが未設定の場合は従来どおり RSS から取得します。
+## 補足
+- 入力 CSV にはヘッダー行が必要です（Netflix 公式エクスポートのデフォルト形式）。
+- 既存履歴は ID/日付/タイトルの3列構成で管理します。ID に接頭辞が含まれている場合は、最も大きい値を元に連番が継続されます。
+- 変換ルールや内部構造の詳細は [`docs/`](docs/README.md) を参照してください。

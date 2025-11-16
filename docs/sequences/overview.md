@@ -1,40 +1,32 @@
-# シーケンス — RunOnce 全体フロー
+# シーケンス — 実行全体フロー
 
 ```mermaid
 sequenceDiagram
 autonumber
-participant GH as GitHub Actions (Runner)
-participant Main as cmd/job/main.go
-participant C as JobController
-participant CH as ChannelRepository
-participant FS as FeedService
-participant FR as FeedRepository
-participant NR as NotifiedRepository
-participant NS as NotifyService
-participant WB as Webhook(Discord/Slack)
+participant CLI as cmd/main.go
+participant Ctrl as NetflixController
+participant Svc as NetflixService
+participant Repo as NetflixRepository
+participant FS as File System
 
-
-GH->>Main: 実行開始
-Main->>C: RunOnce()
-C->>CH: ListEnabled()
-CH-->>C: Channels[]
-loop channels
-C->>FS: ListNewVideos(channel)
-FS->>FR: Fetch(channel_id)
-FR-->>FS: Videos[]
-loop videos
-FS->>NR: Has(video_id)?
-NR-->>FS: true/false
-alt 未通知
-C->>NS: Notify(category, video)
-NS->>WB: POST webhook
-WB-->>NS: 2xx
-NS->>NR: Append(video_id,...)
-else 既通知
-C-->>C: スキップ
+CLI->>Ctrl: Run()
+Ctrl->>Repo: Find raw CSV (Walk src/csv/netflix)
+Repo-->>Ctrl: rawPath
+Ctrl->>Svc: TransformRecords(rawPath, historyPath)
+Svc->>Repo: ReadRawCSV(rawPath)
+Repo-->>Svc: RawNetflixRecord[]
+Svc->>Repo: ReadHistory(historyPath)
+Repo-->>Svc: NetflixRecord[]
+loop raw records
+    Svc->>Svc: ConvertDate & normalize
+    Svc->>Svc: Compare with history signatures
 end
-end
-end
-C-->>Main: 完了
-Main-->>GH: 正常終了
+Svc->>Svc: Generate sequential IDs
+Svc-->>Ctrl: []NetflixRecord (new entries)
+Ctrl->>Svc: SaveHistory(historyPath, records)
+Svc->>Repo: SaveCSV(historyPath, mergedRecords)
+Repo->>FS: Write history.csv
+Svc-->>Ctrl: ok
+Ctrl-->>CLI: nil
+CLI-->>CLI: Exit 0
 ```
