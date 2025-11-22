@@ -5,7 +5,7 @@ DOCKER_COMPOSE_FILE_PATH=-f docker-compose.yml
 
 ENV_PATH=--env-file .env
 USER_FLAG=--user ${USER_NAME}
-CMD=go run ./cmd/job
+CMD=go run ./cmd/main.go
 
 up:
 	docker compose ${DOCKER_COMPOSE_FILE_PATH} ${ENV_PATH} up -d --build
